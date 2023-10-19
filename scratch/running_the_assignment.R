@@ -26,7 +26,7 @@ download.file("https://datadryad.org/stash/downloads/file_stream/382102",
               "data/Traits_73_species.csv")
 
 download.file("https://figshare.com/ndownloader/files/34480856?private_link=b990722d72a26b5bfead",
-              "data/AVONET_Supplementary_dataset_1.xlsx")# original file name not using _ ?
+              "scratch/AVONET_Supplementary_dataset_1.xlsx")# original file name not using _ ?
 
 ```
 
@@ -57,9 +57,10 @@ bor_nestlings <- read_csv("data/73_species.csv")
 
 bor_traits <- read_csv("data/Traits_73_species.csv")
 
-avonet <- readxl::read_excel("data/AVONET_Supplementary_dataset_1.xlsx")
+avonet <- readxl::read_excel("data/AVONET_Supplementary_dataset_1.xlsx", 
+                             sheet = "AVONET1_BirdLife")
 
-
+?readxl::read_excel()
 ```
 
 __________________________________________________________________
@@ -133,6 +134,13 @@ trend <- function(x, y) {
   coef(xy_lm)[2]
 }
 
+############################################
+bor_by_year <- bor_nestlings %>%
+  group_by(Year, Species) %>%
+  summarize(mean_doy = mean(Dayofyear)) %>%
+  view()
+############################################
+
 # Calculate the trend for all species
 bor_trends <- bor_by_year %>% 
   group_by(Species) %>% 
@@ -161,21 +169,69 @@ __________________________________________________________________
 nrow_bor_trends <- nrow(bor_trends) # Use this later
 bor_extreme <- bor_trends %>% 
   # Sort by the day of year trend
-  ___(___) %>% 
+  arrange(doy_trend) %>%
   # Keep just the first (most negative trend) and last (most positive trend) rows
-  slice(c(___, ___))
+  slice(c(1, 73))
 
 # Now plot them
 bor_by_year %>% 
-  filter(Species %in% ___) %>% 
+  filter(Species %in% bor_extreme$Species) %>% #???
   ggplot(aes(Year, mean_doy, color = Species)) + 
   geom_point() +
   geom_smooth(method = "lm")
 
+________________________________________________________________________
+
+<Bring in more data >
+'''
+Next we’re going to test the hypothesis that smaller birds have more flexible phenology, i.e. the absolute value of the trend is correlated with smaller body sizes.
+
+To test our hypothesis, we need to add AVONET data to our phenology data by joining. The keys are a bit tricky here!
+  
+  bor_nestlings has a column called Species with a 6-letter code.
+
+bor_traits has a column called Abbreviation with the 6-letter code and a column called `Scientific name` with the binomial name.
+
+avonet has column called Species1 with the binomial name.
+
+We need to join bor_nestlings to bor_traits, then join with avonet.
+
+Welcome to data in the real world!
+  
+  # First, select and rename important columns
+'''
 
 
+avonet_size <- select(avonet, SciName = Species1, Mass_g = Mass)
+
+bor_sciname <- select(bor_traits, 
+                      Species = Abbreviation, 
+                      SciName = `Scientific name`)
+
+Now join them all together.
+
+bor_trends_size <- bor_trends %>% 
+  left_join(bor_sciname, bor_nestlings, by = "Species") %>%
+  left_join(avonet_size, bor_sciname, by = "SciName") %>%
+  mutate(abs_trend = abs(doy_trend))
 
 
+# Plot it
+ggplot(bor_trends_size, aes(Mass_g, abs_trend)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+That’s kind of hard to interpret. Make a new variable, bor_trends_size2, that removes the missing values in Mass_g and keeps only birds smaller than 2000 g with an absolute trend less than 1.
+
+bor_trends_size2 <- bor_trends_size %>% 
+  drop_na(Mass_g) %>%
+  filter(Mass_g < 2000, abs_trend < 1)
+  
+  ggplot(bor_trends_size2, aes(Mass_g, abs_trend)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+Is our hypothesis supported?
 
 
 

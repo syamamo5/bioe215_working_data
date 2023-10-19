@@ -186,7 +186,7 @@ bor_extreme &lt;- bor_trends %&gt;%
 
 # Now plot them
 bor_by_year %&gt;% 
-  filter(Species %in% bor_extreme$Species) %&gt;%   #???
+  filter(Species %in% bor_extreme$Species) %&gt;%   
   ggplot(aes(Year, mean_doy, color = Species)) + 
   geom_point() +
   geom_smooth(method = "lm")
@@ -202,7 +202,7 @@ bor_by_year %&gt;%
 <p>Welcome to data in the real world!</p>
 <pre><code>
 # First, select and rename important columns
-avonet_size &lt;- select(avonet, SciName = Species1, Mass_g = Mass) # stuck here
+avonet_size &lt;- select(avonet, SciName = Species1, Mass_g = Mass)
 bor_sciname &lt;- select(bor_traits, 
                       Species = Abbreviation, 
                       SciName = `Scientific name`)
@@ -211,7 +211,7 @@ bor_sciname &lt;- select(bor_traits,
 <pre><code>
 bor_trends_size &lt;- bor_trends %&gt;% 
   left_join(bor_sciname, bor_nestlings, by = "Species") %&gt;%
-  left_join(bor_sciname, avonet_size, by = "SciName") %&gt;%
+  left_join(avonet_size, bor_sciname, by = "SciName") %&gt;%
   mutate(abs_trend = abs(doy_trend))
 
 # Plot it

@@ -17,7 +17,7 @@ Download the Dryad dataset. Copy “73_species.csv” and “Traits_73_species.c
 From the AVONET database on Figshare, download “AVONET Supplementary dataset 1.xlsx” do your data/ folder.
 
 
-```{r}
+```
 
 download.file("https://datadryad.org/stash/downloads/file_stream/382103",
               "data/73_species.csv")
@@ -34,7 +34,7 @@ __________________________________________________________________
 
 < Load packages >
 
-```{r}
+```
 
 library(tidyverse)
 library(readxl) #seems to be needed
@@ -51,7 +51,8 @@ Use read_csv() to read “Traits_73_species.csv” and assign it to a variable c
 
 Use readxl::read_excel() to read the “AVONET1_BirdLife” sheet from “AVONET Supplementary dataset 1.xlsx” and assign it to a variable called avonet.
 
-```{r}
+
+```
 
 bor_nestlings <- read_csv("data/73_species.csv")
 
@@ -70,7 +71,7 @@ We’ll explore the boreal bird nestling data together.
 
 Follow along in your Quarto document.
 
-```{r}
+```
 
 all_birds_trend <- bor_nestlings %>% 
   group_by(Year) %>% 
@@ -84,7 +85,7 @@ ggplot(all_birds_trend, aes(Year, mean_doy)) +
 
 That combines 73 species. Let’s see the breakdown by species.
 
-```{r}
+```
 
 species_trends <- bor_nestlings %>% 
   group_by(Year, Species) %>% 
@@ -98,7 +99,7 @@ ggplot(species_trends, aes(Year, mean_doy, color = Species)) +
 
 So chaotic! What if we just look at the 5 most data-rich species?
 
-```{r}
+```
 
 data_richness <- bor_nestlings %>% 
   count(Species)
@@ -123,7 +124,7 @@ A general pattern, with one conflicting example.
 
 What species have the strongest trends?
 
-```{r}
+```
 
 # I'm giving you a *function* to help here. You'll learn more about those next week.
 
@@ -136,7 +137,7 @@ trend <- function(x, y) {
 
 bor_by_year?
 
-```{r}
+```
 bor_by_year <- bor_nestlings %>%
   group_by(Year, Species) %>%
   summarize(mean_doy = mean(Dayofyear)) %>%
@@ -144,7 +145,7 @@ bor_by_year <- bor_nestlings %>%
 
 ```
 
-```{r}
+```
 # Calculate the trend for all species
 bor_trends <- bor_by_year %>%  
   group_by(Species) %>% 
@@ -153,7 +154,7 @@ bor_trends <- bor_by_year %>%
 
 Spot check two species
 
-```{r}
+```
 
 soi <- c("ARDCIN", "LARMIN")
 bor_by_year %>% 
@@ -170,7 +171,7 @@ __________________________________________________________________
 
 Find the species with the most positive and most negative trends, then plot just those.
 
-```{r}
+```
 
 nrow_bor_trends <- nrow(bor_trends) # Use this later
 bor_extreme <- bor_trends %>% 
@@ -206,7 +207,7 @@ We need to join bor_nestlings to bor_traits, then join with avonet.
 
 Welcome to data in the real world!
 
-```{r}
+```
 
 # First, select and rename important columns
 avonet_size <- select(avonet, SciName = Species1, Mass_g = Mass) # stuck here
@@ -218,7 +219,7 @@ bor_sciname <- select(bor_traits,
 
 Now join them all together.
 
-```{r}
+```
 
 bor_trends_size <- bor_trends %>% 
   left_join(bor_sciname, bor_nestlings, by = "Species") %>%
@@ -236,7 +237,7 @@ ggplot(bor_trends_size, aes(Mass_g, abs_trend)) +
 That’s kind of hard to interpret. Make a new variable, bor_trends_size2, that removes the missing values in Mass_g and keeps only birds smaller than 2000 g with an absolute trend less than 1.
 
 
-```{r}
+```
 
 bor_trends_size2 <- bor_trends_size %>% 
   drop_na(Mass_g) %>%
